@@ -1,0 +1,201 @@
+	       CS 3360 -  Programming Language Concepts
+
+	    PROJECT 3: FUNCTIONAL PROGRAMMING WITH HASKELL
+		 (File $Date: 2025/08/15 18:14:34 $)
+
+Due: TBA 
+
+This assignment may be done individually or in pairs. If you work in
+pairs, you must fill out the contribution form.
+
+The primary objective of this assignment is to understand and apply
+the principles of functional programming by creating a console-based
+standalone application for two human players to play Connect Four with
+horizontal and vertical wrap-around against each other, using the
+Haskell programming language [1].
+
+Your program must adhere to the Model-View-Control (MVC) design
+pattern and consist of two modules:
+
+- Board module (M): This module represents the internal logic and data
+  for the game, such as the board state and rules. It must be
+  implemented without any I/O functions.
+
+- Main module (VC): This module handles player interaction, displays
+  the game state, and facilitates turn-taking through a console-based
+  interface. It requires knowledge of basic I/O operations in
+  Haskell. Useful resources include the Haskell I/O tutorials
+  available at https://wiki.haskell.org/Introduction_to_IO and
+  https://www.haskell.org/tutorial/io.html.
+
+Your program must use only standard Prelude functions, with all I/O
+operations confined to the Main module. The Board module should not
+include any I/O functions. In Haskell, an I/O function may call
+non-I/O functions, but a non-I/O function may not call I/O functions.
+
+PART I (65 Points)
+
+Develop a Haskell module named "Board" to model the Connect Four
+board and two players. The module should provide the following
+functions:
+
+1. (5 points) Creating a board and players.
+
+   mkBoard m n 
+     Returns an empty m x n board, where m and n are positive numbers
+     denoting the number of columns and rows, respectively. A 1-based
+     index will be used to denote and access a specific column and row
+     of a board. It is up to you to come up with a concrete
+     representation of the board, e.g., a nested list.
+   
+   mkPlayer = 1
+     Returns the first player. You may choose your own representation,
+     e.g., 1 as done above. The idea is to call this function whenever
+     you need to refer to the first player, rather than using a magic
+     number like 1.
+  
+   mkOpponent = 2
+     Return the second player (the opponent). You may choose your own
+     representation, e.g., 2 as done above.
+
+2. (20 points) Checking a board and dropping a disc
+
+   dropInSlot bd i p
+     Drops a player p's disc in a slot (column) i of a board bd. The
+     specified slot is assumed to have an empty place to hold the
+     dropped disc (see isSlotOpen below).
+
+   isSlotOpen bd i
+     Checks if a slot (column) i of a board bd is open and can hold an
+     additional disc.
+
+   numSlot bd
+     Returns the number of columns of a board bd.
+
+   isFull bd
+     Checks if the given board bd is full and contains no empty
+     places.
+
+3. (30 points) Determining the game outcome
+
+   isWonBy bd p 
+     Checks if the game played on a board bd is won by player
+     p. Specifically, it checks if the board has a winning row for
+     player p. The horizontal and vertical checks must consider
+     wrap-around.
+
+4. (10 points) Converting a board to a string for displaying
+
+   boardToStr playerToChar bd
+
+     Returns a string representation of a board bd. It is a
+     higher-order function. The first argument (playerToChar) is a
+     function to convert a player to a character representation, e.g.,
+     'O' or 'X'. A formatted sample return value is shown below
+     (assuming that one player is mapped to 'O' and the other to 'X'
+     by the playerToChar function):
+
+     ". . . . . . .\n
+      . . . . . . .\n
+      . . . . . . .\n
+      O . . . . . .\n
+      O X . . . . .\n
+      O X O X O X ."
+
+PART II (35 Points) 
+
+Create a Haskell module named "Main" that implements a console-based
+user interface for playing the Connect Four game. To complete this
+part, you may need to import the "System.IO" and "System.Random"
+modules. Your "Main" module should include the following I/O
+functions:
+
+1. (15 points) Reading user inputs and printing outputs.
+
+   playerToChar p 
+     Returns a character representation of a player p. It returns a
+     Char value. This function is used to print the current state of a
+     board (see the boardToStr function above).
+
+   readSlot bd p 
+     Reads a 1-based index of an open slot of a board bd for player p
+     to drop their disc. The function reads inputs from the standard
+     input (stdin) and returns an IO value such as IO(Int) or
+     IO(Integer).
+
+   The following IO functions may be useful.
+
+   putStr, putStrLn - print a string to the standard out
+   getLine - read a line from the standard in
+   reads:: [(Integer, String)] - parse an Integer from a string
+
+   For example, the following IO function reads lines from stdin
+   until a positive Integer is found.
+
+   getX = do
+     putStrLn "Enter a positive value?"
+     line <- getLine
+     let parsed = reads line :: [(Integer, String)] in
+       if length parsed == 0
+       then getX'
+       else let (x, _) = head parsed in
+         if x > 0 
+         then return x
+         else getX'
+     where
+       getX' = do
+         putStrLn "Invalid input!"
+         getX
+
+2. (20 points) Playing a game
+
+   main
+     Main function to play a Connect Four game by two players.
+     It returns an IO() value. The dimension of the board is 7x6, and
+     user inputs are read from the standard input (see the readSlot
+     function above) and outputs such as the board state and the game
+     outcome are printed on the standard output. For Haskell I/O, you
+     will need to import the System.IO module.
+ 
+PART III (Bonus Points)
+
+You have the opportunity to earn extra points by implementing the
+following features. However, these bonus points will only be awarded
+if you have successfully completed all the functions required for the
+regular points.
+
+1. (10 points) Allow players to play against a computer by creating a
+   computer move strategy.  A straightforward way to add this feature
+   is to define a strategy function, such as getRandomSlot or
+   getSmartSlot, and use it instead of the readSlot function for the
+   opponent. Utilize the System.Random module to generate a random
+   value. For example, you can use the expression x <- randomRIO(1,7)
+   to generate a random number between 1 and 7, inclusive.
+
+TESTING
+
+  Your code should be compatible with the Hugs Haskell interpreter,
+  which can be found at https://www.haskell.org/hugs/. In other words,
+  it should be able to be compiled with GHC 6.6 or higher. If you use
+  the Haskell Platform available from
+  https://www.haskell.org/platform/, make sure to avoid any features
+  that are specific to ghci.
+
+SUBMISSION
+   
+  Please submit your source code files, Board.hs and Main.hs, before
+  11:59 pm on the due date. If you are working in a pair, only one
+  submission should be made, and both names should be listed in the
+  submission along with a signed contribution form.
+
+GRADING
+
+  Your code will also be evaluated based on its clarity. Excessive
+  code repetition will result in a lower grade. It is important to
+  write clear and well-documented code, with sensible indentation, so
+  that it is easy to understand. Make sure to include your name in the
+  comments within your code.
+
+REFERENCES 
+
+  [1] Will Kurt, Get Programming with Haskell, Manning Publications, 2018.
