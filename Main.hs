@@ -5,6 +5,7 @@
 module Main where
 
 import Board
+import Data.Time.Clock.POSIX (getPOSIXTime)
 import System.IO (hFlush, stdout)
 
 -- map player to char for display
@@ -36,6 +37,15 @@ readSlot bd p = do
               readSlot bd p
             else return x
 
+-- computer chooses a random open slot
+getRandomSlot :: Board -> IO Int
+getRandomSlot bd = do
+  t <- getPOSIXTime
+  let seed = (floor (t * 1000)) `mod` numSlot bd + 1
+  if isSlotOpen bd seed
+    then return seed
+    else getRandomSlot bd
+
 -- print board state
 printBoard :: Board -> IO ()
 printBoard bd = putStrLn (boardToStr playerToChar bd)
@@ -46,10 +56,10 @@ other 1 = 2
 other 2 = 1
 other x = if x == 1 then 2 else 1 -- fallback
 
--- main game loop
-gameLoop :: Board -> Int -> IO ()
-gameLoop bd p = do
-  putStrLn "" -- blank line
+-- human vs human game loop
+gameLoopHuman :: Board -> Int -> IO ()
+gameLoopHuman bd p = do
+  putStrLn ""
   printBoard bd
   if isFull bd
     then putStrLn "draw! board full"
@@ -61,12 +71,47 @@ gameLoop bd p = do
           putStrLn ""
           printBoard bd'
           putStrLn $ "player " ++ show p ++ " (" ++ [playerToChar p] ++ ") wins!"
-        else gameLoop bd' (other p)
+        else gameLoopHuman bd' (other p)
 
--- entry point
--- starts 7x6 game
+-- human vs computer game loop (player 2 is computer)
+gameLoopComputer :: Board -> Int -> IO ()
+gameLoopComputer bd p = do
+  putStrLn ""
+  printBoard bd
+  if isFull bd
+    then putStrLn "draw! board full"
+    else do
+      slot <-
+        if p == 1
+          then readSlot bd p
+          else do
+            putStrLn "computer (player 2) is choosing..."
+            s <- getRandomSlot bd
+            putStrLn $ "computer picked slot " ++ show s
+            return s
+
+      let bd' = dropInSlot bd slot p
+      if isWonBy bd' p
+        then do
+          putStrLn ""
+          printBoard bd'
+          putStrLn $ "player " ++ show p ++ " (" ++ [playerToChar p] ++ ") wins!"
+        else gameLoopComputer bd' (other p)
+
+-- entry point with mode selection
 main :: IO ()
 main = do
   putStrLn "connect four (7x6) - horiz & vert wrap"
+  putStrLn "1. play vs human"
+  putStrLn "2. play vs computer"
+  putStr "choose mode: "
+  hFlush stdout
+  mode <- getLine
+
   let bd = mkBoard 7 6
-  gameLoop bd mkPlayer
+  case mode of
+    "1" -> gameLoopHuman bd mkPlayer
+    "2" -> gameLoopComputer bd mkPlayer
+    _ -> do
+      putStrLn "invalid choice"
+      main
